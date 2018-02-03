@@ -41,7 +41,7 @@ type HTTP struct{}
 type Request struct {
 	Name   string
 	URL    string
-	ID     int64
+	ID     int
 	Params interface{}
 }
 
