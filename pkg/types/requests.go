@@ -1,5 +1,17 @@
 package types
 
+// ListVolumes general List with options, should replace ListVolumesForAccount and ListActiveVolumes
+type ListVolumesRequest struct {
+	Accounts              []int64 `json:"accounts,omitempty"`
+	IncludeVirtualVolumes bool    `json:"includeVirtualVolumes,omitempty"`
+	IsPaired              bool    `json:"isPaired,omitempty"`
+	Limit                 int64   `json:"limit,omitempty"`
+	StartVolumeID         int64   `json:"startVolumeID,omitempty"`
+	VolumeIDs             []int64 `json:"volumeIDs,omitempty"`
+	VolumeName            string  `json:"volumeName,omitempty"`
+	VolumeStatus          string  `json:"volumeStatus,omitempty"` // creating, snapshotting, active or deleted
+}
+
 // ListVolumesForAccountRequest tbd
 type ListVolumesForAccountRequest struct {
 	AccountID int64 `json:"accountID"`
