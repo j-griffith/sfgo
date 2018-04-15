@@ -7,11 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"strings"
-
-	"github.com/prometheus/common/log"
 )
 
 // APIError wrapper
@@ -43,6 +42,7 @@ type Request struct {
 	URL    string
 	ID     int64
 	Params interface{}
+	Debug  bool
 }
 
 // Post issues the actual request to the SF endpoint.  Requires a url to the endpoint of the form:
@@ -68,7 +68,7 @@ func NewReqID() int {
 // using this just for
 func Check(f func() error) {
 	if err := f(); err != nil {
-		log.Errorf("error in deferred check:%v\n", err)
+		log.Printf("error in deferred check:%v\n", err)
 	}
 }
 
@@ -76,7 +76,7 @@ func Check(f func() error) {
 // into the appropriate response data type
 func DecodeResponse(response []byte, responseType interface{}) (interface{}, error) {
 	if err := json.Unmarshal([]byte(response), &responseType); err != nil {
-		log.Errorf("error detected unmarshalling response: %v", err)
+		log.Printf("error detected unmarshalling response: %v", err)
 		return nil, err
 	}
 	return responseType, nil
@@ -94,20 +94,26 @@ func IssueRequest(r Request, t Transport) ([]byte, error) {
 	})
 
 	if err != nil {
-		log.Errorf("error marshalling api request: %v", err)
+		log.Printf("error marshalling api request: %v", err)
 		return nil, errors.New("device API error")
 	}
-	log.Debugf("issuing request to SolidFire endpoint:  %+v", string(data))
+	if r.Debug {
+		log.Printf("issuing request to SolidFire endpoint:  %+v", string(data))
+	}
 
 	_ = json.Indent(&prettyJSON, data, "", "  ")
 	resp, err := t.Post(r.URL, data)
 	if err != nil {
-		log.Errorf("error response from SolidFire API request: %v", err)
+		if r.Debug {
+			log.Printf("error response from SolidFire API request: %v", err)
+		}
 		return nil, errors.New("device API error")
 	}
 
 	if strings.Contains(resp.Status, "Unauthorized") {
-		log.Errorf("attempted command returned unauthorized, command: %+v, response: %+v", r.Name, resp.Status)
+		if r.Debug {
+			log.Printf("attempted command returned unauthorized, command: %+v, response: %+v", r.Name, resp.Status)
+		}
 		return nil, errors.New("unauthorized request")
 	}
 
